@@ -93,6 +93,7 @@ st.markdown(
 
 st.markdown('<h1 class="main-title">🚀 AI Marketing Campaign Generator</h1>', unsafe_allow_html=True)
 
+# Input Section
 with st.form("campaign_form"):
     st.markdown("### 🛍️ Enter Product Details")
     product = st.text_input("", "EcoSip Smart Bottle - Eco-friendly hydration tracking bottle")
@@ -104,24 +105,30 @@ with st.form("campaign_form"):
 
 if submitted:
     with st.spinner("⚡ Crafting your campaign..."):
-        # Step 1: Text
-        campaign_text = generate_text(product, audience)
-        st.markdown('<div class="section">', unsafe_allow_html=True)
-        st.subheader("📢 Generated Campaign Content")
-        st.write(campaign_text)
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Layout with two columns
+        left_col, right_col = st.columns([2, 1])
 
-        # Step 2: Image
-        st.markdown('<div class="section">', unsafe_allow_html=True)
-        st.subheader("🎨 Ad Creative")
-        img_path = generate_image(f"Ad creative for {product} targeting {audience}")
-        if img_path:
-            st.image(img_path, caption="Generated Ad Creative")
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Step 1: Text Campaign (Left)
+        with left_col:
+            st.markdown('<div class="section">', unsafe_allow_html=True)
+            st.subheader("📢 Generated Campaign Content")
+            campaign_text = generate_text(product, audience)
+            st.write(campaign_text)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-        # Step 3: Audio
-        st.markdown('<div class="section">', unsafe_allow_html=True)
-        st.subheader("🎧 Audio Ad")
-        audio_path = generate_audio(campaign_text.split("\n")[0])
-        st.audio(audio_path)
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Step 2 & 3: Image + Audio (Right)
+        with right_col:
+            # Image
+            st.markdown('<div class="section">', unsafe_allow_html=True)
+            st.subheader("🎨 Ad Creative")
+            img_path = generate_image(f"Ad creative for {product} targeting {audience}")
+            if img_path:
+                st.image(img_path, caption="Generated Ad Creative")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+            # Audio
+            st.markdown('<div class="section">', unsafe_allow_html=True)
+            st.subheader("🎧 Audio Ad")
+            audio_path = generate_audio(campaign_text.split("\n")[0])
+            st.audio(audio_path)
+            st.markdown('</div>', unsafe_allow_html=True)
