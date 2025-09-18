@@ -20,35 +20,47 @@ HF_HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
 def generate_text(product, audience):
     model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""
-    Create a full marketing campaign for:
+Create a full marketing campaign for:
 
-    Product: {product}
-    Target Audience: {audience}
+Product: {product}
+Target Audience: {audience}
 
-    Output:
-    - Ad Copy (headline + tagline)
-    - Email Campaign (subject + body)
-    - Social Media Post
-    - Radio/Podcast Ad Script (30 sec)
-    - Audio Brief (short 1-2 sentence summary for audio ad)
-    """
+Output in clear labeled sections:
+
+Ad Copy:
+...
+
+Email Campaign:
+...
+
+Social Media Post:
+...
+
+Radio/Podcast Ad Script (30 sec):
+...
+
+Audio Brief:
+(Short 1–2 sentence summary for audio ad)
+"""
+
     response = model.generate_content(prompt)
     return response.text
 
 def extract_audio_brief(campaign_text: str) -> str:
     """Extracts the 'Audio Brief' section from Gemini output"""
     lines = campaign_text.splitlines()
-    audio_brief = ""
+    audio_brief = []
     capture = False
     for line in lines:
-        if "Audio Brief" in line:   # start capturing
+        if line.strip().lower().startswith("audio brief"):
             capture = True
             continue
         if capture:
-            if line.strip().startswith("-") or line.strip() == "":
-                break  # stop at next section or empty line
-            audio_brief += line.strip() + " "
-    return audio_brief.strip()
+            if line.strip() == "" or line.strip().endswith(":"):
+                break
+            audio_brief.append(line.strip())
+    return " ".join(audio_brief).strip()
+
 def generate_image(prompt, filename="ad_creative.png"):
     payload = {"inputs": prompt}
     response = requests.post(HF_API_URL, headers=HF_HEADERS, json=payload)
