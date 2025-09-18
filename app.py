@@ -8,9 +8,8 @@ import google.generativeai as genai
 # ========================
 # CONFIG
 # ========================
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-HUGGINGFACE_API_KEY =st.secrets["HUGGINGFACE_API_KEY"]
-
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"] 
+HF_API_TOKEN = st.secrets["HF_API_TOKEN"]
 
 # ========================
 # HELPER FUNCTIONS
@@ -29,7 +28,7 @@ def generate_campaign(product, audience):
     4. Radio Script
     5. Audio Brief (short script suitable for voice ad)
     """
-
+    genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel("gemini-1.5-flash")
     response = model.generate_content(prompt)
     return response.text
