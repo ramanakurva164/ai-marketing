@@ -7,8 +7,8 @@ import google.generativeai as genai
 
 # Load environment variables
 load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-HF_API_TOKEN = os.getenv("HF_API_TOKEN")
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+HF_API_TOKEN = st.secrets["HF_API_TOKEN"]
 
 # Configure Gemini
 genai.configure(api_key=GEMINI_API_KEY)
