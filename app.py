@@ -96,10 +96,18 @@ st.markdown('<h1 class="main-title">🚀 AI Marketing Campaign Generator</h1>', 
 # Input Section
 with st.form("campaign_form"):
     st.markdown("### 🛍️ Enter Product Details")
-    product = st.text_input("", "EcoSip Smart Bottle - Eco-friendly hydration tracking bottle")
+    product = st.text_input(
+        "Product Name & Description",
+        "EcoSip Smart Bottle - Eco-friendly hydration tracking bottle",
+        label_visibility="collapsed"
+    )
 
     st.markdown("### 🎯 Enter Target Audience")
-    audience = st.text_input("", "18–35 year old health-conscious professionals in urban cities")
+    audience = st.text_input(
+        "Target Audience",
+        "18–35 year old health-conscious professionals in urban cities",
+        label_visibility="collapsed"
+    )
 
     submitted = st.form_submit_button("✨ Generate Campaign ✨")
 
