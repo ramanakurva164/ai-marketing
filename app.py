@@ -1,12 +1,10 @@
-import os
-import requests
 import streamlit as st
-from dotenv import load_dotenv
+import requests
 from gtts import gTTS
 import google.generativeai as genai
 
-# Load environment variables
-load_dotenv()
+# ---------------- Configuration ----------------
+# Load secrets from Streamlit
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 HF_API_TOKEN = st.secrets["HF_API_TOKEN"]
 
@@ -18,11 +16,12 @@ HF_API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-dif
 HF_HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
 
 
+# ---------------- Functions ----------------
 def generate_text(product, audience):
-    """Generate campaign text using Gemini"""
     model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""
     Create a full marketing campaign for:
+
     Product: {product}
     Target Audience: {audience}
 
@@ -37,10 +36,8 @@ def generate_text(product, audience):
 
 
 def generate_image(prompt, filename="ad_creative.png"):
-    """Generate ad creative using Hugging Face Stable Diffusion"""
     payload = {"inputs": prompt}
     response = requests.post(HF_API_URL, headers=HF_HEADERS, json=payload)
-
     if response.status_code == 200:
         with open(filename, "wb") as f:
             f.write(response.content)
@@ -51,7 +48,6 @@ def generate_image(prompt, filename="ad_creative.png"):
 
 
 def generate_audio(script, filename="ad_audio.mp3"):
-    """Generate free TTS audio ad using gTTS"""
     tts = gTTS(text=script, lang="en")
     tts.save(filename)
     return filename
@@ -59,27 +55,73 @@ def generate_audio(script, filename="ad_audio.mp3"):
 
 # ---------------- Streamlit UI ----------------
 st.set_page_config(page_title="AI Marketing Campaign Generator", layout="wide")
-st.title("🚀 AI Marketing Campaign Generator")
+st.markdown(
+    """
+    <style>
+        .main-title {
+            text-align: center;
+            font-size: 36px !important;
+            color: #4CAF50;
+        }
+        .section {
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            background-color: #1e1e1e;
+            color: #f5f5f5;
+        }
+        .stTextInput > div > div > input {
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .stButton button {
+            background-color: #4CAF50;
+            color: white;
+            font-size: 18px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            transition: all 0.3s ease-in-out;
+        }
+        .stButton button:hover {
+            background-color: #388E3C;
+            transform: scale(1.05);
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown('<h1 class="main-title">🚀 AI Marketing Campaign Generator</h1>', unsafe_allow_html=True)
 
 with st.form("campaign_form"):
-    product = st.text_input("🛍️ Enter Product Details", "EcoSip Smart Bottle - Eco-friendly hydration tracking bottle")
-    audience = st.text_input("🎯 Enter Target Audience", "18–35 year old health-conscious professionals in urban cities")
-    submitted = st.form_submit_button("Generate Campaign")
+    st.markdown("### 🛍️ Enter Product Details")
+    product = st.text_input("", "EcoSip Smart Bottle - Eco-friendly hydration tracking bottle")
+
+    st.markdown("### 🎯 Enter Target Audience")
+    audience = st.text_input("", "18–35 year old health-conscious professionals in urban cities")
+
+    submitted = st.form_submit_button("✨ Generate Campaign ✨")
 
 if submitted:
-    with st.spinner("Generating campaign..."):
+    with st.spinner("⚡ Crafting your campaign..."):
         # Step 1: Text
         campaign_text = generate_text(product, audience)
+        st.markdown('<div class="section">', unsafe_allow_html=True)
         st.subheader("📢 Generated Campaign Content")
         st.write(campaign_text)
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # Step 2: Image
+        st.markdown('<div class="section">', unsafe_allow_html=True)
         st.subheader("🎨 Ad Creative")
         img_path = generate_image(f"Ad creative for {product} targeting {audience}")
         if img_path:
             st.image(img_path, caption="Generated Ad Creative")
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # Step 3: Audio
+        st.markdown('<div class="section">', unsafe_allow_html=True)
         st.subheader("🎧 Audio Ad")
-        audio_path = generate_audio(campaign_text.split("\n")[0])  # take ad copy for TTS
+        audio_path = generate_audio(campaign_text.split("\n")[0])
         st.audio(audio_path)
+        st.markdown('</div>', unsafe_allow_html=True)
