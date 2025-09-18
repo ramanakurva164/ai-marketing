@@ -37,7 +37,7 @@ def generate_campaign(product, audience):
 def generate_image(prompt):
     """Generate an image using Hugging Face Inference API (Stable Diffusion)."""
     API_URL = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5"
-    headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
+    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
 
     payload = {"inputs": prompt}
     response = requests.post(API_URL, headers=headers, json=payload)
