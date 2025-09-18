@@ -30,11 +30,25 @@ def generate_text(product, audience):
     - Email Campaign (subject + body)
     - Social Media Post
     - Radio/Podcast Ad Script (30 sec)
+    - Audio Brief (short 1-2 sentence summary for audio ad)
     """
     response = model.generate_content(prompt)
     return response.text
 
-
+def extract_audio_brief(campaign_text: str) -> str:
+    """Extracts the 'Audio Brief' section from Gemini output"""
+    lines = campaign_text.splitlines()
+    audio_brief = ""
+    capture = False
+    for line in lines:
+        if "Audio Brief" in line:   # start capturing
+            capture = True
+            continue
+        if capture:
+            if line.strip().startswith("-") or line.strip() == "":
+                break  # stop at next section or empty line
+            audio_brief += line.strip() + " "
+    return audio_brief.strip()
 def generate_image(prompt, filename="ad_creative.png"):
     payload = {"inputs": prompt}
     response = requests.post(HF_API_URL, headers=HF_HEADERS, json=payload)
@@ -137,6 +151,6 @@ if submitted:
             # Audio
             st.markdown('<div class="section">', unsafe_allow_html=True)
             st.subheader("🎧 Audio Ad")
-            audio_path = generate_audio(campaign_text.split("\n")[0])
+            audio_path = generate_audio(extract_audio_brief(campaign_text))
             st.audio(audio_path)
             st.markdown('</div>', unsafe_allow_html=True)
