@@ -9,7 +9,7 @@ import google.generativeai as genai
 # CONFIG
 # ========================
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"] 
-HF_API_TOKEN = st.secrets["HF_API_TOKEN"]
+HF_API_TOKEN = st.secrets["HF_API_KEY"]
 
 # ========================
 # HELPER FUNCTIONS
