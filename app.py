@@ -52,7 +52,7 @@ def extract_audio_brief(campaign_text: str) -> str:
     audio_brief = []
     capture = False
     for line in lines:
-        if line.strip().lower().startswith("audio brief"):
+        if line.strip().lower().startswith("V. Audio Brief"):
             capture = True
             continue
         if capture:
