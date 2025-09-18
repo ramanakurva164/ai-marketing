@@ -1,168 +1,150 @@
 import streamlit as st
+import os
 import requests
 from gtts import gTTS
+import tempfile
 import google.generativeai as genai
 
-# ---------------- Configuration ----------------
-# Load secrets from Streamlit
-GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-HF_API_TOKEN = st.secrets["HF_API_TOKEN"]
+# ========================
+# CONFIG
+# ========================
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 
-# Configure Gemini
-genai.configure(api_key=GEMINI_API_KEY)
-
-# Hugging Face Image Gen API
-HF_API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
-HF_HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
-
-
-# ---------------- Functions ----------------
-def generate_text(product, audience):
-    model = genai.GenerativeModel("gemini-1.5-flash")
+# ========================
+# HELPER FUNCTIONS
+# ========================
+def generate_campaign(product, audience):
+    """Generate campaign text with Gemini."""
     prompt = f"""
-Create a full marketing campaign for:
+    Generate a creative marketing campaign for:
+    Product: {product}
+    Target Audience: {audience}
 
-Product: {product}
-Target Audience: {audience}
+    Include the following sections:
+    1. Ad Copy
+    2. Email Marketing Copy
+    3. Social Media Posts
+    4. Radio Script
+    5. Audio Brief (short script suitable for voice ad)
+    """
 
-Output in clear labeled sections:
-
-Ad Copy:
-...
-
-Email Campaign:
-...
-
-Social Media Post:
-...
-
-Radio/Podcast Ad Script (30 sec):
-...
-
-Audio Brief:
-(Short 1–2 sentence summary for audio ad)
-"""
-
+    model = genai.GenerativeModel("gemini-1.5-flash")
     response = model.generate_content(prompt)
     return response.text
 
-def extract_audio_brief(campaign_text: str) -> str:
-    """Extracts the 'Audio Brief' section from Gemini output"""
-    lines = campaign_text.splitlines()
-    audio_brief = []
-    capture = False
-    for line in lines:
-        if line.strip().lower().startswith("audio brief"):
-            capture = True
-            continue
-        if capture:
-            if line.strip() == "" or line.strip().endswith(":"):
-                break
-            audio_brief.append(line.strip())
-    return " ".join(audio_brief).strip()
 
-def generate_image(prompt, filename="ad_creative.png"):
+def generate_image(prompt):
+    """Generate an image using Hugging Face Inference API (Stable Diffusion)."""
+    API_URL = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5"
+    headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
+
     payload = {"inputs": prompt}
-    response = requests.post(HF_API_URL, headers=HF_HEADERS, json=payload)
+    response = requests.post(API_URL, headers=headers, json=payload)
+
     if response.status_code == 200:
-        with open(filename, "wb") as f:
-            f.write(response.content)
-        return filename
+        tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+        tmp_file.write(response.content)
+        tmp_file.close()
+        return tmp_file.name
     else:
         st.error(f"Image generation failed: {response.text}")
         return None
 
 
-def generate_audio(script, filename="ad_audio.mp3"):
-    tts = gTTS(text=script, lang="en")
-    tts.save(filename)
-    return filename
+def generate_audio(text):
+    """Generate audio using gTTS."""
+    if not text.strip():
+        raise ValueError("No text provided for audio generation.")
+
+    tts = gTTS(text=text, lang="en")
+    tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+    tts.save(tmp_file.name)
+    return tmp_file.name
 
 
-# ---------------- Streamlit UI ----------------
+def extract_section(campaign_text: str, section_name: str) -> str:
+    """Extract specific section content from campaign text."""
+    lines = campaign_text.splitlines()
+    capture = False
+    section = []
+    for line in lines:
+        if line.strip().lower().startswith(section_name.lower()):
+            capture = True
+            continue
+        if capture:
+            if line.strip() == "" or line.strip().endswith(":"):
+                break
+            section.append(line.strip())
+    return "\n".join(section).strip()
+
+
+# ========================
+# STREAMLIT UI
+# ========================
 st.set_page_config(page_title="AI Marketing Campaign Generator", layout="wide")
+
 st.markdown(
     """
     <style>
-        .main-title {
-            text-align: center;
-            font-size: 36px !important;
-            color: #4CAF50;
-        }
-        .section {
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            background-color: #1e1e1e;
-            color: #f5f5f5;
-        }
-        .stTextInput > div > div > input {
-            border-radius: 8px;
-            padding: 10px;
-        }
-        .stButton button {
-            background-color: #4CAF50;
-            color: white;
-            font-size: 18px;
-            padding: 12px 24px;
-            border-radius: 10px;
-            transition: all 0.3s ease-in-out;
-        }
-        .stButton button:hover {
-            background-color: #388E3C;
-            transform: scale(1.05);
-        }
+    body {background-color: #f9f9f9;}
+    .title {text-align: center; font-size: 40px; color: #4CAF50; font-weight: bold;}
+    .section {padding: 20px; border-radius: 12px; margin-bottom: 20px;}
+    .ad {background-color: #E8F5E9;}
+    .email {background-color: #E3F2FD;}
+    .social {background-color: #F3E5F5;}
+    .radio {background-color: #FFF3E0;}
+    .audio {background-color: #ECEFF1;}
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-st.markdown('<h1 class="main-title">🚀 AI Marketing Campaign Generator</h1>', unsafe_allow_html=True)
+st.markdown("<h1 class='title'>🤖 AI Marketing Campaign Generator</h1>", unsafe_allow_html=True)
 
-# Input Section
 with st.form("campaign_form"):
-    st.markdown("### 🛍️ Enter Product Details")
-    product = st.text_input(
-        "Product Name & Description",
-        "EcoSip Smart Bottle - Eco-friendly hydration tracking bottle",
-        label_visibility="collapsed"
-    )
-
-    st.markdown("### 🎯 Enter Target Audience")
-    audience = st.text_input(
-        "Target Audience",
-        "18–35 year old health-conscious professionals in urban cities",
-        label_visibility="collapsed"
-    )
-
-    submitted = st.form_submit_button("✨ Generate Campaign ✨")
+    product = st.text_input("Enter your product details:", "Eco-friendly Water Bottle")
+    audience = st.text_input("Enter target audience:", "Young professionals, fitness enthusiasts")
+    submitted = st.form_submit_button("Generate Campaign")
 
 if submitted:
-    with st.spinner("⚡ Crafting your campaign..."):
-        # Layout with two columns
-        left_col, right_col = st.columns([2, 1])
+    with st.spinner("✨ Generating campaign..."):
+        campaign_text = generate_campaign(product, audience)
 
-        # Step 1: Text Campaign (Left)
-        with left_col:
-            st.markdown('<div class="section">', unsafe_allow_html=True)
-            st.subheader("📢 Generated Campaign Content")
-            campaign_text = generate_text(product, audience)
-            st.write(campaign_text)
-            st.markdown('</div>', unsafe_allow_html=True)
+    st.subheader("📊 Campaign Results")
 
-        # Step 2 & 3: Image + Audio (Right)
-        with right_col:
-            # Image
-            st.markdown('<div class="section">', unsafe_allow_html=True)
-            st.subheader("🎨 Ad Creative")
-            img_path = generate_image(f"Ad creative for {product} targeting {audience}")
-            if img_path:
-                st.image(img_path, caption="Generated Ad Creative")
-            st.markdown('</div>', unsafe_allow_html=True)
+    # Sections with icons + colors
+    sections = {
+        "Ad Copy": ("📝", "ad"),
+        "Email Marketing Copy": ("📧", "email"),
+        "Social Media Posts": ("📱", "social"),
+        "Radio Script": ("🎙️", "radio"),
+        "Audio Brief": ("🎧", "audio"),
+    }
 
-            # Audio
-            st.markdown('<div class="section">', unsafe_allow_html=True)
-            st.subheader("🎧 Audio Ad")
-            audio_path = generate_audio(extract_audio_brief(campaign_text))
-            st.audio(audio_path)
-            st.markdown('</div>', unsafe_allow_html=True)
+    for section, (icon, css_class) in sections.items():
+        st.markdown(f"<div class='section {css_class}'>", unsafe_allow_html=True)
+        st.subheader(f"{icon} {section}")
+
+        content = extract_section(campaign_text, section)
+        if content:
+            st.markdown(f"<p style='font-size:16px; line-height:1.6;'>{content}</p>", unsafe_allow_html=True)
+        else:
+            st.info(f"No {section} found in the campaign text.")
+
+        # Special case: Audio
+        if section == "Audio Brief" and content:
+            try:
+                audio_path = generate_audio(content)
+                st.audio(audio_path)
+            except Exception as e:
+                st.error(f"Audio generation failed: {e}")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # Generate Image
+    st.subheader("🖼️ Generated Ad Image")
+    img_prompt = f"{product} for {audience}, professional ad style"
+    img_path = generate_image(img_prompt)
+    if img_path:
+        st.image(img_path, caption="Generated Campaign Image", use_container_width=True)
