@@ -167,6 +167,6 @@ if submitted:
             # Audio
             st.markdown('<div class="section">', unsafe_allow_html=True)
             st.subheader("🎧 Audio Ad")
-            audio_path = generate_audio(extract_audio_brief(campaign_text))
+            audio_path = generate_audio(extract_audio_brief_content(campaign_text))
             st.audio(audio_path)
             st.markdown('</div>', unsafe_allow_html=True)
