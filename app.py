@@ -52,14 +52,14 @@ def extract_audio_brief(campaign_text: str) -> str:
     audio_brief = []
     capture = False
     for line in lines:
-        if line.strip().lower().startswith("V. Audio Brief"):
+        if "audio brief" in line.lower():
             capture = True
             continue
         if capture:
             if line.strip() == "" or line.strip().endswith(":"):
                 break
             audio_brief.append(line.strip())
-    return " ".join(audio_brief).strip()
+    return " ".join(audio_brief).strip() or "This is a short audio ad promoting the product."
 
 def generate_image(prompt, filename="ad_creative.png"):
     payload = {"inputs": prompt}
