@@ -25,7 +25,7 @@ Create a full marketing campaign for:
 Product: {product}
 Target Audience: {audience}
 
-Output in clear labeled sections:
+Output in clear labeled sections (always include all):
 
 Ad Copy:
 ...
@@ -39,9 +39,10 @@ Social Media Post:
 Radio/Podcast Ad Script (30 sec):
 ...
 
-Audio Brief:
-(Short 1–2 sentence summary for audio ad)
+Audio Brief (1–2 sentences summary for audio ad):
+...
 """
+
 
     response = model.generate_content(prompt)
     return response.text
