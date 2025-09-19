@@ -47,17 +47,22 @@ Audio Brief (1–2 sentences summary for audio ad):
     response = model.generate_content(prompt)
     return response.text
 
-
-
-def extract_audio_brief(campaign_text: str) -> str:
-    """Extracts the 'Audio Brief' section from Gemini output, regardless of formatting"""
+def extract_audio_brief_content(campaign_text: str) -> str:
+    """
+    Extracts only the text after the colon in the 'Audio Brief' section.
+    """
+    # Find Audio Brief section (with or without Roman numeral prefix)
     match = re.search(r"audio brief[:\-]?\s*(.*)", campaign_text, re.IGNORECASE | re.DOTALL)
     if match:
-        # Grab everything after "Audio Brief:" until the next section (Roman numeral or header)
         section = match.group(1).strip()
+        # Stop at the next section (Roman numeral or header)
         section = re.split(r"\n\s*[IVX]+\.\s|^#|^Ad Copy|^Email Campaign|^Social Media|^Radio/Podcast", section, flags=re.IGNORECASE | re.MULTILINE)[0]
-        return section.strip()
+        # Grab only the text after the first colon
+        if ":" in section:
+            return section.split(":", 1)[1].strip()
+        return section
     return "This is a short audio ad promoting the product."
+
 
 
 def generate_image(prompt, filename="ad_creative.png"):
