@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 from gtts import gTTS
 import google.generativeai as genai
-
+import re
 # ---------------- Configuration ----------------
 # Load secrets from Streamlit
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
@@ -47,20 +47,18 @@ Audio Brief (1–2 sentences summary for audio ad):
     response = model.generate_content(prompt)
     return response.text
 
+
+
 def extract_audio_brief(campaign_text: str) -> str:
-    """Extracts the 'Audio Brief' section from Gemini output"""
-    lines = campaign_text.splitlines()
-    audio_brief = []
-    capture = False
-    for line in lines:
-        if "audio brief" in line.lower():
-            capture = True
-            continue
-        if capture:
-            if line.strip() == "" or line.strip().endswith(":"):
-                break
-            audio_brief.append(line.strip())
-    return " ".join(audio_brief).strip() or "This is a short audio ad promoting the product."
+    """Extracts the 'Audio Brief' section from Gemini output, regardless of formatting"""
+    match = re.search(r"audio brief[:\-]?\s*(.*)", campaign_text, re.IGNORECASE | re.DOTALL)
+    if match:
+        # Grab everything after "Audio Brief:" until the next section (Roman numeral or header)
+        section = match.group(1).strip()
+        section = re.split(r"\n\s*[IVX]+\.\s|^#|^Ad Copy|^Email Campaign|^Social Media|^Radio/Podcast", section, flags=re.IGNORECASE | re.MULTILINE)[0]
+        return section.strip()
+    return "This is a short audio ad promoting the product."
+
 
 def generate_image(prompt, filename="ad_creative.png"):
     payload = {"inputs": prompt}
