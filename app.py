@@ -42,17 +42,17 @@ Audio Brief (1–2 sentences summary for audio ad):
 ...
 """
 
-
+    errors = []
     for model_name in ["gemini-1.5-flash", "gemini-1.5-pro"]:
         try:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
             return response.text
         except Exception as e:
-            print(f"Model {model_name} failed: {e}")
-            continue
+            errors.append(f"{model_name}: {str(e)}")
 
-    return "⚠️ All models failed. Please check your API key or project settings."
+    return "⚠️ All models failed.\n\n" + "\n".join(errors)
+
 
 def extract_audio_brief_content(campaign_text: str) -> str:
     """
