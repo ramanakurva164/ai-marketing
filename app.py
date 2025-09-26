@@ -18,7 +18,6 @@ HF_HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
 
 # ---------------- Functions ----------------
 def generate_text(product, audience):
-    model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""
 Create a full marketing campaign for:
 
@@ -44,8 +43,16 @@ Audio Brief (1–2 sentences summary for audio ad):
 """
 
 
-    response = model.generate_content(prompt)
-    return response.text
+    for model_name in ["gemini-1.5-flash", "gemini-1.5-pro"]:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            print(f"Model {model_name} failed: {e}")
+            continue
+
+    return "⚠️ All models failed. Please check your API key or project settings."
 
 def extract_audio_brief_content(campaign_text: str) -> str:
     """
