@@ -43,7 +43,7 @@ Audio Brief (1–2 sentences summary for audio ad):
 """
 
     errors = []
-    for model_name in ["gemini-1.5-flash", "gemini-1.5-pro"]:
+    for model_name in ["gemini-2.5-flash","gemini-1.5-flash", "gemini-1.5-pro"]:
         try:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
