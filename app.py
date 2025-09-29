@@ -3,6 +3,7 @@ import requests
 from gtts import gTTS
 import google.generativeai as genai
 import re
+
 # ---------------- Configuration ----------------
 # Load secrets from Streamlit
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
@@ -43,7 +44,7 @@ Audio Brief (1–2 sentences summary for audio ad):
 """
 
     errors = []
-    for model_name in ["gemini-2.5-flash","gemini-1.5-flash", "gemini-1.5-pro"]:
+    for model_name in ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"]:
         try:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
@@ -58,18 +59,19 @@ def extract_audio_brief_content(campaign_text: str) -> str:
     """
     Extracts only the text after the colon in the 'Audio Brief' section.
     """
-    # Find Audio Brief section (with or without Roman numeral prefix)
     match = re.search(r"audio brief[:\-]?\s*(.*)", campaign_text, re.IGNORECASE | re.DOTALL)
     if match:
         section = match.group(1).strip()
         # Stop at the next section (Roman numeral or header)
-        section = re.split(r"\n\s*[IVX]+\.\s|^#|^Ad Copy|^Email Campaign|^Social Media|^Radio/Podcast", section, flags=re.IGNORECASE | re.MULTILINE)[0]
-        # Grab only the text after the first colon
+        section = re.split(
+            r"\n\s*[IVX]+\.\s|^#|^Ad Copy|^Email Campaign|^Social Media|^Radio/Podcast",
+            section,
+            flags=re.IGNORECASE | re.MULTILINE,
+        )[0]
         if ":" in section:
             return section.split(":", 1)[1].strip()
         return section
     return "This is a short audio ad promoting the product."
-
 
 
 def generate_image(prompt, filename="ad_creative.png"):
@@ -92,6 +94,7 @@ def generate_audio(script, filename="ad_audio.mp3"):
 
 # ---------------- Streamlit UI ----------------
 st.set_page_config(page_title="AI Marketing Campaign Generator", layout="wide")
+
 st.markdown(
     """
     <style>
@@ -136,14 +139,14 @@ with st.form("campaign_form"):
     product = st.text_input(
         "Product Name & Description",
         "EcoSip Smart Bottle - Eco-friendly hydration tracking bottle",
-        label_visibility="collapsed"
+        label_visibility="collapsed",
     )
 
     st.markdown("### 🎯 Enter Target Audience")
     audience = st.text_input(
         "Target Audience",
         "18–35 year old health-conscious professionals in urban cities",
-        label_visibility="collapsed"
+        label_visibility="collapsed",
     )
 
     submitted = st.form_submit_button("✨ Generate Campaign ✨")
